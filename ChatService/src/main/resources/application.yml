@@ -1,0 +1,23 @@
+server:
+  port: 8083
+
+spring:
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
+  web:
+    socket:
+      stomp:
+        broker:
+          relay:
+            enabled: true
+            relay-host: localhost
+            relay-port: 61613
+            client-login: guest
+            client-passcode: guest
+            heartbeat:
+              server: 60 * 60000    # Send heartbeat every 10 seconds
+              client: 60 * 60000    # Expect heartbeat every 10 seconds

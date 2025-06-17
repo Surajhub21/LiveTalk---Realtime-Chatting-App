@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Chat App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px 30px;
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+        }
+
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 10px 30px rgba(58, 123, 213, 0.3);
+        }
+
+        .avatar::before {
+            content: "👋";
+            font-size: 32px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #ecf0f1;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #fff;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #00d2ff;
+            box-shadow: 0 0 0 3px rgba(0, 210, 255, 0.1);
+        }
+
+        .form-group select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 12px center;
+            background-repeat: no-repeat;
+            background-size: 16px;
+        }
+
+        .password-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-60%); /* Adjust this value to move the button up or down */
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0 5px;
+            font-size: 1.1em;
+        }
+
+        .password-toggle:hover {
+            color: #00d2ff;
+        }
+
+        .role-info {
+            font-size: 12px;
+            color: #7f8c8d;
+            text-align: left;
+            margin-top: 5px;
+            line-height: 1.4;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 210, 255, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .link {
+            color: #00d2ff;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .link:hover {
+            text-decoration: underline;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            display: none;
+        }
+
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .password-strength {
+            margin-top: 5px;
+            font-size: 12px;
+            text-align: left;
+        }
+
+        .strength-bar {
+            width: 100%;
+            height: 4px;
+            background-color: #ecf0f1;
+            border-radius: 2px;
+            margin: 5px 0;
+            overflow: hidden;
+        }
+
+        .strength-fill {
+            height: 100%;
+            transition: all 0.3s ease;
+            border-radius: 2px;
+        }
+
+        .strength-weak { width: 25%; background-color: #e74c3c; }
+        .strength-fair { width: 50%; background-color: #f39c12; }
+        .strength-good { width: 75%; background-color: #f1c40f; }
+        .strength-strong { width: 100%; background-color: #27ae60; }
+
+        @media (max-width: 480px) {
+            .container {
+                margin: 10px;
+                padding: 30px 20px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            .avatar {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .avatar::before {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="avatar"></div>
+    <h1>Join Us Today</h1>
+    <p class="subtitle">Create your account to get started</p>
+
+    <div id="message" class="message"></div>
+
+    <form id="signupForm">
+        <div class="form-group">
+            <input type="text" id="username" placeholder="Username" required>
+        </div>
+
+        <div class="form-group">
+            <input type="email" id="email" placeholder="Email address" required>
+        </div>
+
+        <div class="form-group">
+            <div class="password-wrapper">
+                <input type="password" id="password" placeholder="Create password" required>
+                <button type="button" class="password-toggle" onclick="togglePassword()">👁️</button>
+            </div>
+            <div class="password-strength">
+                <div class="strength-bar">
+                    <div id="strengthFill" class="strength-fill"></div>
+                </div>
+                <span id="strengthText">Password strength</span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <select id="role" required>
+                <option value="" disabled selected>Select your role</option>
+                <option value="VIEWER">Viewer</option>
+                <option value="CREATOR">Creator</option>
+                <option value="ADMIN">Admin</option>
+            </select>
+            <div class="role-info">
+                <strong>Viewer:</strong> Can read and participate in chats<br>
+                <strong>Creator:</strong> Can create and manage chat rooms<br>
+                <strong>Admin:</strong> Full system access and moderation
+            </div>
+        </div>
+
+        <button type="submit" class="btn" id="submitBtn">
+            Create Account
+        </button>
+    </form>
+
+    <p>Already have an account? <a href="/" class="link">Sign in here</a></p>
+</div>
+
+<script>
+    let isPasswordVisible = false;
+
+    function togglePassword() {
+        const passwordInput = document.getElementById('password');
+        const toggleBtn = document.querySelector('.password-toggle');
+
+        if (isPasswordVisible) {
+            passwordInput.type = 'password';
+            toggleBtn.textContent = '👁️';
+            isPasswordVisible = false;
+        } else {
+            passwordInput.type = 'text';
+            toggleBtn.textContent = '🙈';
+            isPasswordVisible = true;
+        }
+    }
+
+    function checkPasswordStrength(password) {
+        const strengthFill = document.getElementById('strengthFill');
+        const strengthText = document.getElementById('strengthText');
+
+        let strength = 0;
+        let text = 'Too weak';
+
+        if (password.length >= 8) strength++;
+        if (/[a-z]/.test(password)) strength++;
+        if (/[A-Z]/.test(password)) strength++;
+        if (/[0-9]/.test(password)) strength++;
+        if (/[^A-Za-z0-9]/.test(password)) strength++;
+
+        strengthFill.className = 'strength-fill';
+
+        switch (strength) {
+            case 0:
+            case 1:
+                strengthFill.classList.add('strength-weak');
+                text = 'Weak';
+                break;
+            case 2:
+                strengthFill.classList.add('strength-fair');
+                text = 'Fair';
+                break;
+            case 3:
+                strengthFill.classList.add('strength-good');
+                text = 'Good';
+                break;
+            case 4:
+            case 5:
+                strengthFill.classList.add('strength-strong');
+                text = 'Strong';
+                break;
+        }
+
+        strengthText.textContent = text;
+    }
+
+    function showMessage(text, type) {
+        const messageEl = document.getElementById('message');
+        messageEl.textContent = text;
+        messageEl.className = `message ${type}`;
+        messageEl.style.display = 'block';
+
+        setTimeout(() => {
+            messageEl.style.display = 'none';
+        }, 5000);
+    }
+
+    function setLoading(loading) {
+        const submitBtn = document.getElementById('submitBtn');
+        if (loading) {
+            submitBtn.innerHTML = '<span class="loading"></span>Creating Account...';
+            submitBtn.disabled = true;
+        } else {
+            submitBtn.innerHTML = 'Create Account';
+            submitBtn.disabled = false;
+        }
+    }
+
+    function validateEmail(email) {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+    }
+
+    // Password strength checker
+    document.getElementById('password').addEventListener('input', function(e) {
+        checkPasswordStrength(e.target.value);
+    });
+
+    document.getElementById('signupForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const username = document.getElementById('username').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const role = document.getElementById('role').value;
+
+        // Validation
+        if (!username || !email || !password || !role) {
+            showMessage('Please fill in all fields', 'error');
+            return;
+        }
+
+        if (username.length < 3) {
+            showMessage('Username must be at least 3 characters long', 'error');
+            return;
+        }
+
+        if (!validateEmail(email)) {
+            showMessage('Please enter a valid email address', 'error');
+            return;
+        }
+
+        if (password.length < 6) {
+            showMessage('Password must be at least 6 characters long', 'error');
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            const response = await fetch('http://localhost:8081/users', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username: username,
+                    email: email,
+                    password: password,
+                    role: role
+                })
+            });
+
+            const data = await response.json();
+            setLoading(false);
+
+            if (response.status === 201) {
+                showMessage('Account created successfully! Redirecting to sign in...', 'success');
+
+                // Reset form
+                document.getElementById('signupForm').reset();
+                document.getElementById('strengthFill').className = 'strength-fill';
+                document.getElementById('strengthText').textContent = 'Password strength';
+
+                // Redirect to login page after 2 seconds
+                setTimeout(() => {
+                    sessionStorage.setItem('loggedInUser', JSON.stringify(data));
+                    window.location.href = '/home';
+                }, 2000);
+
+            } else {
+                showMessage(data.message || 'Registration failed. Please try again.', 'error');
+            }
+
+        } catch (error) {
+            setLoading(false);
+            console.error('Registration error:', error);
+            showMessage('Network error. Please try again.', 'error');
+        }
+    });
+
+    // Check if user is already logged in
+    if (sessionStorage.getItem('loggedInUser')) {
+        window.location.href = '/home';
+    }
+</script>
+</body>
+</html>
