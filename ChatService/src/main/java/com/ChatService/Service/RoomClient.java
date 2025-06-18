@@ -10,5 +10,4 @@ public interface RoomClient {
     @PutMapping("/rooms/{roomId}/close")
     boolean makeAnRoomAsClosed(@PathVariable String roomId);
 
-
 }

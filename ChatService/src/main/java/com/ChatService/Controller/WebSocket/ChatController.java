@@ -2,9 +2,11 @@ package com.ChatService.Controller.WebSocket;
 
 import com.ChatService.Config.WebSocketEventListener;
 import com.ChatService.Entity.ChatMessage;
+import com.ChatService.Service.ChatMessageService;
 import com.ChatService.Service.ModerationClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -14,6 +16,7 @@ import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -22,19 +25,32 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ChatController {
 
-    private final SimpMessagingTemplate messagingTemplate;
     private final WebSocketEventListener eventListener;
-    private final ModerationClient moderationClient;
+    private final SimpMessagingTemplate messagingTemplate;
 
+    private final ChatMessageService chatService;
+
+
+
+    // 🟢 Send & Save Message
     @MessageMapping("/chat/{roomId}/sendMessage")
-    @SendTo("/topic/{roomId}")
-    public ChatMessage sendMessage(@DestinationVariable String roomId,
-                                   @Payload ChatMessage chatMessage) {
+    public void sendMessage(@DestinationVariable String roomId,
+                            @Payload ChatMessage chatMessage) {
         chatMessage.setRoomId(roomId);
         chatMessage.setType(ChatMessage.MessageType.CHAT);
-        return chatMessage;
+
+        // Set created time and store in DB
+        chatMessage.setCreatedAt(LocalDateTime.now());
+        chatMessage.setLikeCount(0);
+
+        // Send to clients
+        messagingTemplate.convertAndSend("/topic/" + roomId, chatMessage);
+
+        //Save in db Async
+        chatService.saveMessage(chatMessage);
     }
 
+    //  Add User
     @MessageMapping("/chat/{roomId}/addUser")
     @SendTo("/topic/{roomId}")
     public ChatMessage addUser(@DestinationVariable String roomId,
@@ -52,6 +68,19 @@ public class ChatController {
         return chatMessage;
     }
 
+    // 🟢 Track Like
+    @MessageMapping("/chat/{roomId}/likeMessage")
+    public void likeMessage(@DestinationVariable String roomId,
+                            @Payload Map<String, String> payload) {
+        String messageId = payload.get("messageId");
+
+        ChatMessage updated = chatService.likeMessage(messageId);
+
+        // Broadcast updated like to all clients
+        messagingTemplate.convertAndSend("/topic/" + roomId + "/like", updated);
+    }
+
+    // 🟢 Get Users
     @MessageMapping("/chat/{roomId}/getUsers")
     public void getUsers(@DestinationVariable String roomId) {
         eventListener.broadcastUserList(roomId);

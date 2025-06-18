@@ -448,6 +448,129 @@
         .user-menu-dropdown button:hover {
             background: #f5f5f5;
         }
+        /* Add like button styles */
+        .like-section {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 6px;
+            margin-left: 2px;
+            user-select: none;
+        }
+        .like-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 10px;
+            padding-top: 4px;
+            border-top: 1px solid #f3f4f6;
+            width: fit-content;
+            font-size: 0.95em;
+            color: #e25555;
+        }
+        .like-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 2px;
+            display: flex;
+            align-items: center;
+            transition: transform 0.1s;
+            outline: none;
+        }
+        .like-btn:active {
+            transform: scale(1.15);
+        }
+        .like-count {
+            font-size: 1em;
+            color: #e25555;
+            min-width: 18px;
+            text-align: left;
+            font-weight: 500;
+        }
+        .like-float-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 2px;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+            width: fit-content;
+            /* visually outside the bubble */
+        }
+        .like-own {
+            justify-content: flex-end;
+            margin-left: auto;
+            margin-right: 10px;
+        }
+        .like-other {
+            justify-content: flex-start;
+            margin-left: 10px;
+        }
+        .like-btn-hand {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 2px 4px;
+            display: flex;
+            align-items: center;
+            transition: transform 0.1s;
+            outline: none;
+            border-radius: 50%;
+        }
+        .like-btn-hand:active {
+            transform: scale(1.18) rotate(-10deg);
+            background: #e3f0ff;
+            box-shadow: 0 2px 8px #1877f233;
+        }
+        .like-hand-icon {
+            width: 22px;
+            height: 22px;
+            fill: #1877f2;
+            filter: drop-shadow(0 1px 2px #1877f244);
+            transition: filter 0.2s;
+        }
+        .like-btn-hand:active .like-hand-icon {
+            filter: drop-shadow(0 0 8px #1877f2aa);
+        }
+        .like-count-hand {
+            font-size: 1em;
+            color: #1877f2;
+            min-width: 18px;
+            text-align: left;
+            font-weight: 600;
+            margin-left: 2px;
+            user-select: none;
+        }
+        .like-float-row-attached {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            position: absolute;
+            bottom: 8px;
+            /* Attach to the right or left depending on message side */
+        }
+        .message.own .like-float-row-attached {
+            right: 12px;
+        }
+        .message.other .like-float-row-attached {
+            left: 12px;
+        }
+        .like-bottom-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            position: absolute;
+            bottom: 8px;
+            /* Attach to the right or left depending on message side */
+        }
+        .message.own .like-bottom-row {
+            right: 16px;
+        }
+        .message.other .like-bottom-row {
+            left: 16px;
+        }
     </style>
 </head>
 <body>
@@ -784,10 +907,28 @@ async function kickUser(userName) {
         } else {
             infoText = `${isOwnMessage ? 'You' : message.sender} • ${time}`;
         }
+
+        // --- Like button attached to the bottom of the message bubble ---
+        let likeHtml = "";
+        if (message.type === "CHAT") {
+            const likeCount = typeof message.likeCount === "number" ? message.likeCount : 0;
+            likeHtml = `
+                <div class="like-bottom-row ${isOwnMessage ? 'like-own' : 'like-other'}">
+                    <button class="like-btn-hand" title="Like">
+                        <svg class="like-hand-icon" viewBox="0 0 24 24">
+                            <path d="M9 22V12.5L5.21 13.11C4.5 13.22 4 13.86 4 14.59V20c0 .55.45 1 1 1h4zm2-9.5V22h7c.83 0 1.54-.5 1.84-1.22l2.02-4.71c.09-.23.14-.47.14-.72V13c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L15 4.41 13.59 3 8.17 8.41c-.37.37-.59.88-.59 1.41V19c0 .55.45 1 1 1h1v-8.5z" fill="#1877f2"/>
+                        </svg>
+                    </button>
+                    <span class="like-count-hand">${likeCount}</span>
+                </div>
+            `;
+        }
+
         messageElement.innerHTML = `
-            <div class="message-bubble">
+            <div class="message-bubble" style="position:relative; padding-bottom:36px;">
                 <div class="message-info">${infoText}</div>
                 <div class="message-text">${message.type === "CHAT" ? escapeHtml(message.content) : ""}</div>
+                ${likeHtml}
             </div>
         `;
         chatMessages.appendChild(messageElement);
