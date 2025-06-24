@@ -39,10 +39,6 @@ public class ChatController {
         chatMessage.setRoomId(roomId);
         chatMessage.setType(ChatMessage.MessageType.CHAT);
 
-        // Set created time and store in DB
-        chatMessage.setCreatedAt(LocalDateTime.now());
-        chatMessage.setLikeCount(0);
-
         // Send to clients
         messagingTemplate.convertAndSend("/topic/" + roomId, chatMessage);
 
@@ -71,13 +67,22 @@ public class ChatController {
     // 🟢 Track Like
     @MessageMapping("/chat/{roomId}/likeMessage")
     public void likeMessage(@DestinationVariable String roomId,
-                            @Payload Map<String, String> payload) {
-        String messageId = payload.get("messageId");
+                            @Payload ChatMessage payload) {
+        try {
 
-        ChatMessage updated = chatService.likeMessage(messageId);
+            log.info("Message :- {}" , payload);
 
-        // Broadcast updated like to all clients
-        messagingTemplate.convertAndSend("/topic/" + roomId + "/like", updated);
+            ChatMessage updated = chatService.likeMessage(payload);
+
+            if(updated != null) {
+                // Broadcast updated like to all clients
+                messagingTemplate.convertAndSend("/topic/" + roomId + ".like", updated);
+
+            }
+
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
     }
 
     // 🟢 Get Users

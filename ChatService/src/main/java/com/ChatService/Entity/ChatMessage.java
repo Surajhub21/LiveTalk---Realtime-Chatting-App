@@ -1,22 +1,22 @@
 package com.ChatService.Entity;
 
+
+
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-
-import lombok.*;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
-@Builder
-@AllArgsConstructor
 @NoArgsConstructor
-@Document(collection = "chat_messages")
+@AllArgsConstructor
+@Builder
 public class ChatMessage {
 
-    @Id
     private String id;
 
     private String sender;
@@ -25,6 +25,7 @@ public class ChatMessage {
     private MessageType type;
 
     private int likeCount;
+    private Set<String> likedByUsers = new HashSet<>();;
     private LocalDateTime createdAt;
 
     public enum MessageType {

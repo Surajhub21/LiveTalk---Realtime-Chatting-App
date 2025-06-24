@@ -634,77 +634,86 @@
     let stompClient = null;
     let username = null;
     let role = null;
-    // Use last part of path as roomId
-    const roomId = window.location.pathname.split("/").pop();
+// Use last part of path as roomId
+const roomId = window.location.pathname.split("/").pop();
 
-    // UI elements
-    const chatMessages = document.getElementById("chat-messages");
-    const messageInput = document.getElementById("message-input");
-    const sendBtn = document.getElementById("send-btn");
-    const usersList = document.getElementById("users-list");
-    const onlineCount = document.getElementById("online-count");
-    const copyLinkBtn = document.getElementById("copy-link-btn");
-    const roomName = document.getElementById("room-name");
-    const statusDot = document.getElementById("status-dot");
-    const connectionText = document.getElementById("connection-text");
+console.log("[Init] roomId:", roomId);
 
-    // Set room name
-    roomName.textContent = roomId;
+// UI elements
+const chatMessages = document.getElementById("chat-messages");
+const messageInput = document.getElementById("message-input");
+const sendBtn = document.getElementById("send-btn");
+const usersList = document.getElementById("users-list");
+const onlineCount = document.getElementById("online-count");
+const copyLinkBtn = document.getElementById("copy-link-btn");
+const roomName = document.getElementById("room-name");
+const statusDot = document.getElementById("status-dot");
+const connectionText = document.getElementById("connection-text");
 
-    // Authentication check (from room.html)
-    const loggedInUser = JSON.parse(sessionStorage.getItem("loggedInUser") || "{}");
-    if (!loggedInUser.username) {
-        alert("You must be logged in to continue.");
-        window.location.href = "/";
+// Set room name
+roomName.textContent = roomId;
+console.log("[Init] Set room name:", roomId);
+
+// Authentication check (from room.html)
+const loggedInUser = JSON.parse(sessionStorage.getItem("loggedInUser") || "{}");
+if (!loggedInUser.username) {
+    console.log("[Auth] No logged in user, redirecting...");
+    alert("You must be logged in to continue.");
+    window.location.href = "/";
+} else {
+    username = loggedInUser.username;
+    role = loggedInUser.role;
+    console.log("[Auth] User:", username, "Role:", role);
+    connectToRoom();
+}
+
+// Copy room link
+copyLinkBtn.addEventListener("click", () => {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+        console.log("[CopyLink] Room link copied!");
+        showNotification("Room link copied!");
+    }).catch(err => {
+        console.error("[CopyLink] Clipboard error:", err);
+        alert("Failed to copy the link.");
+    });
+});
+
+// Send message on button click or Enter
+sendBtn.addEventListener("click", sendMessage);
+messageInput.addEventListener("keypress", function(e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+    }
+});
+
+// Toggle users panel
+let isPanelCollapsed = false;
+window.toggleUsersPanel = function() {
+    console.log("[UI] Toggle users panel");
+    const panel = document.getElementById('users-panel');
+    const toggleText = document.getElementById('toggle-text');
+    isPanelCollapsed = !isPanelCollapsed;
+    if (isPanelCollapsed) {
+        panel.classList.add('collapsed');
+        toggleText.textContent = 'Show Users';
     } else {
-        username = loggedInUser.username;
-        role = loggedInUser.role;
-        connectToRoom();
+        panel.classList.remove('collapsed');
+        toggleText.textContent = 'Hide Users';
     }
+};
 
-    // Copy room link
-    copyLinkBtn.addEventListener("click", () => {
-        const url = window.location.href;
-        navigator.clipboard.writeText(url).then(() => {
-            showNotification("Room link copied!");
-        }).catch(err => {
-            alert("Failed to copy the link.");
-            console.error("Clipboard error:", err);
-        });
-    });
+// Connection status UI
+function updateConnectionStatus(status, text) {
+    console.log("[Status] updateConnectionStatus:", status, text);
+    statusDot.className = `status-dot ${status}`;
+    connectionText.textContent = text;
+}
 
-    // Send message on button click or Enter
-    sendBtn.addEventListener("click", sendMessage);
-    messageInput.addEventListener("keypress", function(e) {
-        if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
-        }
-    });
-
-    // Toggle users panel
-    let isPanelCollapsed = false;
-    window.toggleUsersPanel = function() {
-        const panel = document.getElementById('users-panel');
-        const toggleText = document.getElementById('toggle-text');
-        isPanelCollapsed = !isPanelCollapsed;
-        if (isPanelCollapsed) {
-            panel.classList.add('collapsed');
-            toggleText.textContent = 'Show Users';
-        } else {
-            panel.classList.remove('collapsed');
-            toggleText.textContent = 'Hide Users';
-        }
-    };
-
-    // Connection status UI
-    function updateConnectionStatus(status, text) {
-        statusDot.className = `status-dot ${status}`;
-        connectionText.textContent = text;
-    }
-
-    // Connect to WebSocket and subscribe
-    function connectToRoom() {
+// Connect to WebSocket and subscribe
+function connectToRoom() {
+    console.log("[WebSocket] connectToRoom called");
     updateConnectionStatus('connecting', 'Connecting...');
 
     // ✅ Pass username & roomId in URL query parameters
@@ -714,40 +723,50 @@
     stompClient.heartbeat.incoming = 60 * 60000;
     stompClient.heartbeat.outgoing = 60 * 60000;
 
-    // STOMP headers here don't matter for the interceptor
     stompClient.connect({}, async function (frame) {
+        console.log("[WebSocket] Connected:", frame);
         updateConnectionStatus('connected', 'Connected');
 
         stompClient.subscribe(`/topic/${roomId}`, onMessageReceived);
+        console.log("[WebSocket] Subscribed to /topic/" + roomId);
+
         stompClient.subscribe(`/topic/${roomId}.users`, onUserListUpdated);
+        console.log("[WebSocket] Subscribed to /topic/" + roomId + ".users");
+
+        // Subscribe to like updates
+        stompClient.subscribe(`/topic/${roomId}.like`, onLikeUpdated);
+        console.log("[WebSocket] Subscribed to /topic/" + roomId + ".like");
 
         stompClient.send(`/app/chat/${roomId}/addUser`, {}, JSON.stringify({
             sender: username,
             type: "JOIN"
         }));
+        console.log("[WebSocket] Sent addUser");
 
         await fetchBannedUsers();
 
         setTimeout(() => {
             stompClient.send(`/app/chat/${roomId}/getUsers`, {}, {});
+            console.log("[WebSocket] Sent getUsers");
         }, 500);
     }, function (error) {
+        console.error("[WebSocket] Connection error:", error);
         updateConnectionStatus('disconnected', 'Disconnected');
         alert("Room Closed! You will redirect to home page...");
         window.location.href = '/';
-        console.error("WebSocket error:", error);
     });
 }
 
+// Handle incoming chat messages
+function onMessageReceived(payload) {
+    console.log("[Message] onMessageReceived:", payload);
+    const message = JSON.parse(payload.body);
+    displayMessage(message);
+}
 
-    // Handle incoming chat messages
-    function onMessageReceived(payload) {
-        const message = JSON.parse(payload.body);
-        displayMessage(message);
-    }
-
-    // Handle user list updates (NOW FOR EVERYONE)
-    function onUserListUpdated(msg) {
+// Handle user list updates (NOW FOR EVERYONE)
+function onUserListUpdated(msg) {
+    console.log("[UserList] onUserListUpdated:", msg);
     try {
         const data = JSON.parse(msg.body);
         const count = data.count || 0;
@@ -792,10 +811,11 @@
             usersList.appendChild(userElement);
         });
     } catch (err) {
-        console.error("User list update error:", err);
+        console.error("[UserList] User list update error:", err);
     }
 }
 function showUserMenu(userId, event, userElement) {
+    console.log("[UI] showUserMenu for", userId);
     // Hide all other menus
     document.querySelectorAll('.user-menu-dropdown').forEach(menu => menu.style.display = 'none');
     // Show this menu
@@ -810,16 +830,17 @@ document.addEventListener('click', function() {
 
 // Add fetchBannedUsers function
 async function fetchBannedUsers() {
+    console.log("[BannedUsers] fetchBannedUsers called");
     const bannedSection = document.querySelector('.banned-users-section');
     bannedSection.style.display = 'block';
     try {
         const response = await fetch(`http://localhost:8084/moderation/banned-users/${roomId}`);
-        console.log(response)
+        console.log("[BannedUsers] Response:", response)
         if (!response.ok) {
             throw new Error('Failed to fetch banned users');
         }
         const bannedUsers = await response.json();
-        console.log('Fetched banned users:', bannedUsers);
+        console.log('[BannedUsers] Fetched banned users:', bannedUsers);
 
         const bannedUsersList = document.getElementById('banned-users-list');
         bannedUsersList.innerHTML = '';
@@ -833,13 +854,13 @@ async function fetchBannedUsers() {
             bannedUsersList.appendChild(userElement);
         });
     } catch (error) {
-        console.error('Error fetching banned users:', error);
+        console.error('[BannedUsers] Error fetching banned users:', error);
     }
 }
 
 // Update kickUser function
 async function kickUser(userName) {
-    console.log(roomId + " "+ userName);
+    console.log("[Kick] kickUser called for:", userName);
     try {
         const response = await fetch("http://localhost:8083/chat/kick", {
             method: "POST",
@@ -857,138 +878,195 @@ async function kickUser(userName) {
         }
 
         const data = await response.json();
-        console.log("User kicked successfully:", data);
+        console.log("[Kick] User kicked successfully:", data);
 
         // Fetch updated banned users list
         await fetchBannedUsers();
 
     } catch (error) {
-        console.error("Error kicking user:", error);
+        console.error("[Kick] Error kicking user:", error);
     }
 }
 
-
-    // Send chat message
-    function sendMessage() {
-        const content = messageInput.value.trim();
-        if (content && stompClient) {
-            stompClient.send(`/app/chat/${roomId}/sendMessage`, {}, JSON.stringify({
-                sender: username,
-                content: content,
-                type: "CHAT"
-            }));
-            messageInput.value = "";
-            messageInput.focus();
+// Send chat message
+function sendMessage() {
+    console.log("[Send] sendMessage called");
+    const content = messageInput.value.trim();
+    if (content && stompClient) {
+        // Generate a unique messageId before sending
+        let tempId = "";
+        if (window.crypto && window.crypto.randomUUID) {
+            tempId = crypto.randomUUID();
+        } else {
+            // Fallback for browsers without crypto.randomUUID
+            tempId = 'msg-' + Date.now() + '-' + Math.floor(Math.random() * 1000000);
         }
+        console.log("[Send] Generated tempId:", tempId);
+
+        stompClient.send(`/app/chat/${roomId}/sendMessage`, {}, JSON.stringify({
+            id: tempId,
+            sender: username,
+            content: content,
+            type: "CHAT"
+        }));
+        messageInput.value = "";
+        messageInput.focus();
+        console.log("[Send] Message sent:", content, "with id:", tempId);
+    }
+}
+
+// Display chat message in UI
+function displayMessage(message) {
+    console.log("[Display] displayMessage called:", message);
+    const messageElement = document.createElement('div');
+    const isOwnMessage = message.sender === username;
+    messageElement.className = `message ${isOwnMessage ? 'own' : 'other'}`;
+    let time = "";
+    if (message.timestamp) {
+        try {
+            const d = new Date(message.timestamp);
+            time = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        } catch {
+            time = message.timestamp;
+        }
+    } else {
+        time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    }
+    let infoText = "";
+    if (message.type === "JOIN") {
+        infoText = `${message.sender} joined the room`;
+    } else if (message.type === "LEAVE") {
+        infoText = `${message.sender} left the room`;
+    } else {
+        infoText = `${isOwnMessage ? 'You' : message.sender} • ${time}`;
     }
 
-    // Display chat message in UI
-    function displayMessage(message) {
-        const messageElement = document.createElement('div');
-        const isOwnMessage = message.sender === username;
-        messageElement.className = `message ${isOwnMessage ? 'own' : 'other'}`;
-        let time = "";
-        if (message.timestamp) {
-            // Try to parse ISO or fallback
-            try {
-                const d = new Date(message.timestamp);
-                time = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            } catch {
-                time = message.timestamp;
-            }
-        } else {
-            time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        }
-        let infoText = "";
-        if (message.type === "JOIN") {
-            infoText = `${message.sender} joined the room`;
-        } else if (message.type === "LEAVE") {
-            infoText = `${message.sender} left the room`;
-        } else {
-            infoText = `${isOwnMessage ? 'You' : message.sender} • ${time}`;
-        }
-
-        // --- Like button attached to the bottom of the message bubble ---
-        let likeHtml = "";
-        if (message.type === "CHAT") {
-            const likeCount = typeof message.likeCount === "number" ? message.likeCount : 0;
-            likeHtml = `
-                <div class="like-bottom-row ${isOwnMessage ? 'like-own' : 'like-other'}">
-                    <button class="like-btn-hand" title="Like">
-                        <svg class="like-hand-icon" viewBox="0 0 24 24">
-                            <path d="M9 22V12.5L5.21 13.11C4.5 13.22 4 13.86 4 14.59V20c0 .55.45 1 1 1h4zm2-9.5V22h7c.83 0 1.54-.5 1.84-1.22l2.02-4.71c.09-.23.14-.47.14-.72V13c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L15 4.41 13.59 3 8.17 8.41c-.37.37-.59.88-.59 1.41V19c0 .55.45 1 1 1h1v-8.5z" fill="#1877f2"/>
-                        </svg>
-                    </button>
-                    <span class="like-count-hand">${likeCount}</span>
-                </div>
-            `;
-        }
-
-        messageElement.innerHTML = `
-            <div class="message-bubble" style="position:relative; padding-bottom:36px;">
-                <div class="message-info">${infoText}</div>
-                <div class="message-text">${message.type === "CHAT" ? escapeHtml(message.content) : ""}</div>
-                ${likeHtml}
+    // --- Like button attached to the bottom of the message bubble ---
+    let likeHtml = "";
+    if (message.type === "CHAT") {
+        const likeCount = typeof message.likeCount === "number" ? message.likeCount : 0;
+        likeHtml = `
+            <div class="like-bottom-row ${isOwnMessage ? 'like-own' : 'like-other'}">
+                <button class="like-btn-hand" title="Like" data-message-id="${message.id}" type="button">
+                    <svg class="like-hand-icon" viewBox="0 0 24 24">
+                        <path d="M9 22V12.5L5.21 13.11C4.5 13.22 4 13.86 4 14.59V20c0 .55.45 1 1 1h4zm2-9.5V22h7c.83 0 1.54-.5 1.84-1.22l2.02-4.71c.09-.23.14-.47.14-.72V13c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L15 4.41 13.59 3 8.17 8.41c-.37.37-.59.88-.59 1.41V19c0 .55.45 1 1 1h1v-8.5z" fill="#1877f2"/>
+                    </svg>
+                </button>
+                <span class="like-count-hand" data-message-id="${message.id}">${likeCount}</span>
             </div>
         `;
-        chatMessages.appendChild(messageElement);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-        setTimeout(() => {
-            messageElement.style.opacity = '1';
-        }, 10);
     }
-
-    // Show notification (for copy link)
-    function showNotification(message) {
-        const notification = document.createElement('div');
-        notification.textContent = message;
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: white;
-            padding: 12px 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
-            z-index: 10000;
-            animation: slideIn 0.3s ease-out;
-        `;
-        document.body.appendChild(notification);
-        setTimeout(() => {
-            notification.style.animation = 'slideOut 0.3s ease-out forwards';
-            setTimeout(() => document.body.removeChild(notification), 300);
-        }, 3000);
-    }
-
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    // Add slide out animation for notification
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes slideOut {
-            to {
-                opacity: 0;
-                transform: translateX(100%);
-            }
-        }
+    messageElement.innerHTML = `
+        <div class="message-bubble" style="position:relative; padding-bottom:36px;">
+            <div class="message-info">${infoText}</div>
+            <div class="message-text">${message.type === "CHAT" ? escapeHtml(message.content) : ""}</div>
+            ${likeHtml}
+        </div>
     `;
-    document.head.appendChild(style);
+    chatMessages.appendChild(messageElement);
 
-    // Responsive: collapse users panel on mobile
-    window.addEventListener('resize', handleResize);
-    function handleResize() {
-        if (window.innerWidth <= 768) {
-            if (!isPanelCollapsed) {
-                window.toggleUsersPanel();
-            }
+    // Add click event for like button if present
+    if (message.type === "CHAT" && message.id) {
+        const likeBtn = messageElement.querySelector(`.like-btn-hand[data-message-id="${message.id}"]`);
+        if (likeBtn) {
+            likeBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log("[Like] Like button clicked for messageId:", message.id, "stompClient:", !!stompClient);
+                if (stompClient && message.id) {
+                    try {
+                        // Send both messageId and roomId as per backend requirement
+                        stompClient.send(`/app/chat/${roomId}/likeMessage`, {}, JSON.stringify({
+                            id: message.id,
+                            sender: username,
+                            roomId: roomId
+                        }));
+                        console.log("[Like] Like sent for messageId:", message.id, "roomId:", roomId);
+                    } catch (err) {
+                        console.error("[Like] Error sending like:", err);
+                    }
+                } else {
+                    console.error("[Like] stompClient not ready or message.id missing");
+                }
+            });
         }
     }
-    handleResize();
+
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    setTimeout(() => {
+        messageElement.style.opacity = '1';
+    }, 10);
+}
+
+// Handle like updates from backend
+function onLikeUpdated(payload) {
+    console.log("[Like] onLikeUpdated called:", payload);
+    const updatedMsg = JSON.parse(payload.body);
+    const msgId = updatedMsg.id;
+    // Find the like count span and update it
+    const likeCountSpan = document.querySelector(`.like-count-hand[data-message-id="${msgId}"]`);
+    if (likeCountSpan) {
+        likeCountSpan.textContent = updatedMsg.likeCount;
+        console.log("[Like] Like count updated for messageId:", msgId, "likeCount:", updatedMsg.likeCount);
+    } else {
+        console.log("[Like] Like count span not found for messageId:", msgId);
+    }
+}
+
+// Show notification (for copy link)
+function showNotification(message) {
+    console.log("[UI] showNotification:", message);
+    const notification = document.createElement('div');
+    notification.textContent = message;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        padding: 12px 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+        z-index: 10000;
+        animation: slideIn 0.3s ease-out;
+    `;
+    document.body.appendChild(notification);
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease-out forwards';
+        setTimeout(() => document.body.removeChild(notification), 300);
+    }, 3000);
+}
+
+function escapeHtml(text) {
+    // No log here, utility
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Add slide out animation for notification
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideOut {
+        to {
+            opacity: 0;
+            transform: translateX(100%);
+        }
+    }
+`;
+document.head.appendChild(style);
+
+// Responsive: collapse users panel on mobile
+window.addEventListener('resize', handleResize);
+function handleResize() {
+    console.log("[UI] handleResize called");
+    if (window.innerWidth <= 768) {
+        if (!isPanelCollapsed) {
+            window.toggleUsersPanel();
+        }
+    }
+}
+handleResize();
 </script>
 </body>
 </html>
