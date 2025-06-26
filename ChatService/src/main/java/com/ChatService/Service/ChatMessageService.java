@@ -1,17 +1,13 @@
 package com.ChatService.Service;
 
 import com.ChatService.Entity.ChatMessage;
-import com.ChatService.Entity.SaveMessages;
 import com.ChatService.Repository.ChatMessageRepository;
 import com.ChatService.Repository.MongoQueryIMPL;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 public class ChatMessageService {
@@ -27,53 +23,35 @@ public class ChatMessageService {
     @Async
     public void saveMessage(ChatMessage message) {
 
-        SaveMessages save = mongoQueryIMPL.findRoomMessagesByRoomId(message.getRoomId());
+        messageRepo.save(message);
 
-        if(save != null){
-            save.getChatMessageList().add(message);
-            messageRepo.save(save);
-        }else {
-            save = new SaveMessages();
-            save.setRoomId(message.getRoomId());
-            save.getChatMessageList().add(message);
-            messageRepo.save(save);
-        }
     }
 
     public ChatMessage likeMessage(ChatMessage message) {
-        SaveMessages save = mongoQueryIMPL.findRoomMessagesByRoomId(message.getRoomId());
-        ChatMessage returnMessage = new ChatMessage();
+        ChatMessage chatMessage = mongoQueryIMPL.findChatMessageById(message.getId());
 
-        if (save != null) {
-            List<ChatMessage> list = save.getChatMessageList();
+        if (message != null) {
 
-            for (ChatMessage chatMessage : list) {
-                if (chatMessage.getId().equals(message.getId())) {
-
-                    if (chatMessage.getLikedByUsers() == null) {
-                        chatMessage.setLikedByUsers(new HashSet<>());
-                    }
-
-                    if (!chatMessage.getLikedByUsers().contains(message.getSender())) {
-
-                        chatMessage.getLikedByUsers().add(message.getSender());
-                        chatMessage.setLikeCount(chatMessage.getLikeCount() + 1);
-                    }
-                    else {
-
-                        chatMessage.getLikedByUsers().remove(message.getSender());
-                        chatMessage.setLikeCount(chatMessage.getLikeCount() - 1);
-                    }
-
-                    returnMessage = chatMessage;
-                    break;
-                }
+            if (chatMessage.getLikedByUsers() == null) {
+                chatMessage.setLikedByUsers(new HashSet<>());
             }
 
-            messageRepo.save(save);
+            if (!chatMessage.getLikedByUsers().contains(message.getSender())) {
+
+                chatMessage.getLikedByUsers().add(message.getSender());
+                chatMessage.setLikeCount(chatMessage.getLikeCount() + 1);
+
+            } else {
+
+                chatMessage.getLikedByUsers().remove(message.getSender());
+                chatMessage.setLikeCount(chatMessage.getLikeCount() - 1);
+            }
+
+
+            messageRepo.save(chatMessage);
         }
 
-        return returnMessage;
+        return chatMessage;
     }
 
 }

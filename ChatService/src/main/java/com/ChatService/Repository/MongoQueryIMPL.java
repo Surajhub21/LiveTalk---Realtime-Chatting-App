@@ -1,16 +1,11 @@
 package com.ChatService.Repository;
 
 import com.ChatService.Entity.ChatMessage;
-import com.ChatService.Entity.SaveMessages;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 @Component
 public class MongoQueryIMPL {
@@ -18,10 +13,10 @@ public class MongoQueryIMPL {
     @Autowired
     private MongoTemplate mongoTemplate;
 
-    public SaveMessages findRoomMessagesByRoomId(String roomId){
+    public ChatMessage findChatMessageById(String id){
         Query query = new Query();
-        query.addCriteria(Criteria.where("roomId").is(roomId));
+        query.addCriteria(Criteria.where("id").is(id));
 
-        return mongoTemplate.findOne(query , SaveMessages.class);
+        return mongoTemplate.findOne(query , ChatMessage.class);
     }
 }

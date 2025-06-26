@@ -79,11 +79,35 @@ public class WebSocketEventListener {
     @Async
     private void closeRoom(String roomId) {
         try {
+            // Notify external service (e.g., DB or Room Microservice)
             roomClient.makeAnRoomAsClosed(roomId);
+
+            // Remove user list (already done in caller, but just in case)
+            roomUserMap.remove(roomId);
+
+            // Remove all session mappings related to the room
+            Set<String> sessionsToRemove = new HashSet<>();
+            for (Map.Entry<String, String> entry : sessionRoomMap.entrySet()) {
+                String sessionId = entry.getKey();
+                String mappedRoomId = entry.getValue();
+
+                if (roomId.equals(mappedRoomId)) {
+                    sessionUserMap.remove(sessionId); // remove user
+                    sessionsToRemove.add(sessionId);  // remove room mapping later
+                }
+            }
+
+            for (String sessionId : sessionsToRemove) {
+                sessionRoomMap.remove(sessionId);
+            }
+
+            log.info("Destroyed room '{}': Cleaned all related session mappings and resources", roomId);
+
         } catch (Exception e) {
-            log.error("Failed to close room: {}", roomId, e);
+            log.error("Failed to close and cleanup room: {}", roomId, e);
         }
     }
+
 
     public void registerUser(String sessionId, String username, String roomId) {
         sessionUserMap.put(sessionId, username);

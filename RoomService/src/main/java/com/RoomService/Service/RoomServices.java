@@ -49,6 +49,7 @@ public class RoomServices {
     }
 
     public Room joinToARoom(JoinRoomRequest request){
+
         UserModel user = userClient.getUserByUserName(request.getUsername());
 
         if (user == null) {
@@ -59,11 +60,15 @@ public class RoomServices {
         if (user.getRole() != UserModel.UserRole.VIEWER) {
             throw new UnauthorizedRoleException("User is not authorized to create a room. Only users with role 'VIEWER' can create rooms.");
         }
-
         Room room = getRoomByRoomId(request.getRoomId());
-        room.getParticipants().add(request.getUsername());
-        roomRepository.save(room);
-        return room;
+
+        if(room != null && room.getStatus() != Room.RoomStatus.CLOSED) {
+            room.getParticipants().add(request.getUsername());
+            roomRepository.save(room);
+            return room;
+        }
+
+        throw new RuntimeException("Room is already Closed");
     }
 
     public boolean makeARoomAsAClose(String roomId){

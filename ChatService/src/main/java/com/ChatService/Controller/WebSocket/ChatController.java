@@ -38,6 +38,7 @@ public class ChatController {
                             @Payload ChatMessage chatMessage) {
         chatMessage.setRoomId(roomId);
         chatMessage.setType(ChatMessage.MessageType.CHAT);
+        chatMessage.setCreatedAt(LocalDateTime.now());
 
         // Send to clients
         messagingTemplate.convertAndSend("/topic/" + roomId, chatMessage);
