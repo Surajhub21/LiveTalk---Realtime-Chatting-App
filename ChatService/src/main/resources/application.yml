@@ -25,3 +25,11 @@ spring:
             heartbeat:
               server: 60 * 60000    # Send heartbeat every 10 seconds
               client: 60 * 60000    # Expect heartbeat every 10 seconds
+
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka
+  instance:
+    prefer-ip-address: true
