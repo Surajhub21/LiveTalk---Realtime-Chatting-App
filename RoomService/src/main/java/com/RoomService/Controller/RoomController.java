@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.concurrent.CompletableFuture;
 
-@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/rooms")
 @Slf4j

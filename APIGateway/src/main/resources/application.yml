@@ -14,19 +14,19 @@ spring:
         - id: ModerationService
           uri: lb://MODERATIONSERVICE
           predicates:
-            -Path=/moderation/**
+            - Path=/moderation/**
         - id: RoomService
           uri: lb://ROOMSERVICE
           predicates:
-            -Path=/rooms/**
+            - Path=/rooms/**
         - id: NotificationService
           uri: lb://NOTIFICATIONSERVICE
           predicates:
-            -Path=/notification/**
-        - id: ChatController
+            - Path=/notification/**
+        - id: ChatService
           uri: lb://CHATSERVICE
           predicates:
-            -Path=/chat/**
+            - Path=/chat/**
 
 eureka:
   client:

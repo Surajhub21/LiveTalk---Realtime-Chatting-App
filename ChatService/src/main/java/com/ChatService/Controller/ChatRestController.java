@@ -6,7 +6,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/chat")
 public class ChatRestController {
@@ -15,6 +14,11 @@ public class ChatRestController {
 
     public ChatRestController(WebSocketEventListener webSocketEventListener) {
         this.webSocketEventListener = webSocketEventListener;
+    }
+
+    @GetMapping("/c")
+    public String chat(){
+        return "ChatService is Running";
     }
 
     @PostMapping("/kick")
