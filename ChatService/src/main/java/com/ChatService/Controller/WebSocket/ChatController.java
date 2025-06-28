@@ -2,6 +2,7 @@ package com.ChatService.Controller.WebSocket;
 
 import com.ChatService.Config.WebSocketEventListener;
 import com.ChatService.Entity.ChatMessage;
+import com.ChatService.Entity.SuperChatRequest;
 import com.ChatService.Service.ChatMessageService;
 import com.ChatService.Service.ModerationClient;
 import lombok.RequiredArgsConstructor;
