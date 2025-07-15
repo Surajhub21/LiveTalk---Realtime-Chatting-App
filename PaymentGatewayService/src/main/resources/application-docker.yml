@@ -1,5 +1,5 @@
 chat-service:
-  url: http://localhost:8083
+  url: http://chat-service:8083
 
 stripe:
   secretKey: ${STRIPE_SECRETKEY}
@@ -10,6 +10,6 @@ server:
 eureka:
   client:
     serviceUrl:
-      defaultZone: http://localhost:8761/eureka
+      defaultZone: http://eureka-registry:8761/eureka
   instance:
     prefer-ip-address: true

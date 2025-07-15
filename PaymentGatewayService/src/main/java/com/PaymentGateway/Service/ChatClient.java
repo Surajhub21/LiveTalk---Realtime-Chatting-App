@@ -6,9 +6,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-@FeignClient(url = "http://localhost:8083/chat" , name = "Chat-Service")
+@FeignClient(url = "${chat-service.url}" , name = "CHATSERVICE")
 public interface ChatClient {
 
-    @PostMapping("/payment")
+    @PostMapping("/chat/payment")
     void sendPaymentSuccessMessage(@RequestBody SuperChatRequest superChatRequest);
 }

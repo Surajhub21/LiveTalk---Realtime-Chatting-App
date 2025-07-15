@@ -38,7 +38,7 @@ public class WebSocketBanInterceptor implements HandshakeInterceptor {
 
             if (username == null || roomId == null) {
                 response.setStatusCode(HttpStatus.BAD_REQUEST);
-                return false;
+                return true;
             }
 
             List<String> bannedUsers = moderationClient.getBannedUsers(roomId);

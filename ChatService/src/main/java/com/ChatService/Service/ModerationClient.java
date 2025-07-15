@@ -7,12 +7,12 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@FeignClient(name = "moderation-service", url = "http://localhost:8084/moderation")
+@FeignClient(name = "MODERATIONSERVICE", url = "${moderation-service.url}")
 public interface ModerationClient {
 
-    @PostMapping("/ban")
+    @PostMapping("/moderation/ban")
     ResponseEntity<?> bannedUser(@RequestBody BannedRequest bannedRequest);
 
-    @GetMapping("/banned-users/{roomId}")
+    @GetMapping("/moderation/banned-users/{roomId}")
     List<String> getBannedUsers(@PathVariable String roomId);
 }

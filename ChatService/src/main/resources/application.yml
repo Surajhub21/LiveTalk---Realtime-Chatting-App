@@ -1,3 +1,9 @@
+room-service:
+  url: http://localhost:8082
+moderation-service:
+  url: http://localhost:8084
+
+
 server:
   port: 8083
 
@@ -25,6 +31,15 @@ spring:
             heartbeat:
               server: 60 * 60000    # Send heartbeat every 10 seconds
               client: 60 * 60000    # Expect heartbeat every 10 seconds
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  metrics:
+    enable:
+      websocket: true
 
 
 eureka:

@@ -40,7 +40,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void configureMessageBroker(MessageBrokerRegistry config) {
 
         config.enableStompBrokerRelay("/topic", "/queue") // Use RabbitMQ STOMP relay
-                .setRelayHost("localhost")
+                .setRelayHost("rabbitmq")
                 .setRelayPort(61613)
                 .setClientLogin("guest")
                 .setClientPasscode("guest")
@@ -53,9 +53,15 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
+        // For browser SockJS clients
         registry.addEndpoint("/websocket")
-                .setAllowedOriginPatterns("http://127.0.0.1:5500")
+                .setAllowedOrigins("http://127.0.0.1:5500")
                 .addInterceptors(banInterceptor)
                 .withSockJS();
+
+        // For native clients like Python
+        registry.addEndpoint("/ws")
+                .setAllowedOrigins("*") // or restrict to your dev machine IP
+                .addInterceptors(banInterceptor);
     }
 }

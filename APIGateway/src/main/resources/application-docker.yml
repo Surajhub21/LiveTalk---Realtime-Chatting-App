@@ -9,34 +9,39 @@ spring:
     gateway:
       routes:
         - id: UserService
-          uri: lb://USERSERVICE
+          uri: http://user-service:8081
           predicates:
             - Path=/users/**
+
         - id: ModerationService
-          uri: lb://MODERATIONSERVICE
+          uri: http://moderation-service:8084
           predicates:
             - Path=/moderation/**
+
         - id: RoomService
-          uri: lb://ROOMSERVICE
+          uri: http://room-service:8082
           predicates:
             - Path=/rooms/**
+
         - id: NotificationService
-          uri: lb://NOTIFICATIONSERVICE
+          uri: http://notification-service:8085
           predicates:
             - Path=/notification/**
+
         - id: ChatService
-          uri: lb://CHATSERVICE
+          uri: http://chat-service:8083
           predicates:
             - Path=/chat/**
+
         - id: PaymentGatewayService
-          uri: lb://PAYMENTGATEWAYSERVICE
+          uri: http://payment-gateway-service:8083
           predicates:
             - Path=/payment/**
 
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: http://eureka-registry:8761/eureka/
 
 management:
   endpoints:

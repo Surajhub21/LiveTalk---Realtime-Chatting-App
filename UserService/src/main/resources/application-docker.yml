@@ -1,13 +1,9 @@
-user-service:
-  url: http://localhost:8081
-
-
 server:
-  port: 8082
+  port: 8081
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/LiveTalk
+    url: jdbc:postgresql://postgres:5432/LiveTalk
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
@@ -23,6 +19,6 @@ spring:
 eureka:
   client:
     serviceUrl:
-      defaultZone: http://localhost:8761/eureka
+      defaultZone: http://eureka-registry:8761/eureka
   instance:
     prefer-ip-address: true
