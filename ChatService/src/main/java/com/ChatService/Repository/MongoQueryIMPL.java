@@ -16,7 +16,6 @@ public class MongoQueryIMPL {
     public ChatMessage findChatMessageById(String id){
         Query query = new Query();
         query.addCriteria(Criteria.where("id").is(id));
-
         return mongoTemplate.findOne(query , ChatMessage.class);
     }
 }

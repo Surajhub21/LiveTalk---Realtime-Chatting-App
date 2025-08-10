@@ -3,21 +3,29 @@ package com.ChatService.Service;
 import com.ChatService.Entity.ChatMessage;
 import com.ChatService.Repository.ChatMessageRepository;
 import com.ChatService.Repository.MongoQueryIMPL;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class ChatMessageService {
 
     private final ChatMessageRepository messageRepo;
-    private final MongoQueryIMPL mongoQueryIMPL;
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
 
-    public ChatMessageService(ChatMessageRepository messageRepo, MongoQueryIMPL mongoQueryIMPL) {
+    private static final String LIKE_COUNT_KEY_PREFIX = "chat:likeCount:";
+    private static final String LIKED_USERS_KEY_PREFIX = "chat:likedUsers:";
+
+
+    public ChatMessageService(ChatMessageRepository messageRepo) {
         this.messageRepo = messageRepo;
-        this.mongoQueryIMPL = mongoQueryIMPL;
     }
 
     @Async
@@ -28,30 +36,35 @@ public class ChatMessageService {
     }
 
     public ChatMessage likeMessage(ChatMessage message) {
-        ChatMessage chatMessage = mongoQueryIMPL.findChatMessageById(message.getId());
+        String messageId = message.getId();
+        String sender = message.getSender();
 
-        if (message != null) {
+        String likeCountKey = LIKE_COUNT_KEY_PREFIX + messageId;
+        String likedUsersKey = LIKED_USERS_KEY_PREFIX + messageId;
 
-            if (chatMessage.getLikedByUsers() == null) {
-                chatMessage.setLikedByUsers(new HashSet<>());
-            }
+        Boolean alreadyLiked = redisTemplate.opsForSet().isMember(likedUsersKey, sender);
 
-            if (!chatMessage.getLikedByUsers().contains(message.getSender())) {
-
-                chatMessage.getLikedByUsers().add(message.getSender());
-                chatMessage.setLikeCount(chatMessage.getLikeCount() + 1);
-
-            } else {
-
-                chatMessage.getLikedByUsers().remove(message.getSender());
-                chatMessage.setLikeCount(chatMessage.getLikeCount() - 1);
-            }
-
-
-            messageRepo.save(chatMessage);
+        long updatedCount;
+        if (Boolean.TRUE.equals(alreadyLiked)) {
+            // Unlike: remove from set, decrement count
+            redisTemplate.opsForSet().remove(likedUsersKey, sender);
+            updatedCount = redisTemplate.opsForValue().decrement(likeCountKey);
+        } else {
+            // Like: add to set, increment count
+            redisTemplate.opsForSet().add(likedUsersKey, sender);
+            updatedCount = redisTemplate.opsForValue().increment(likeCountKey);
         }
+        // Build updated ChatMessage object from Redis data
+        ChatMessage updated = new ChatMessage();
+        updated.setId(messageId);
+        updated.setLikeCount((int) updatedCount);
 
-        return chatMessage;
+        Set<Object> likedUsers = redisTemplate.opsForSet().members(likedUsersKey);
+        updated.setLikedByUsers(
+                likedUsers.stream().map(Object::toString).collect(Collectors.toSet())
+        );
+
+        return updated;
     }
 
 }

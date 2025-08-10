@@ -68,23 +68,16 @@ public class ChatController {
 
     // 🟢 Track Like
     @MessageMapping("/chat/{roomId}/likeMessage")
-    public void likeMessage(@DestinationVariable String roomId,
-                            @Payload ChatMessage payload) {
+    public void likeMessage(@DestinationVariable String roomId, @Payload ChatMessage payload) {
         try {
-
-            log.info("Message :- {}" , payload);
-
+            log.info(payload.toString());
             ChatMessage updated = chatService.likeMessage(payload);
-
-            if(updated != null) {
-                // Broadcast updated like to all clients
-                messagingTemplate.convertAndSend("/topic/" + roomId + ".like", updated);
-
-            }
-
-        } catch (Exception e) {
+            messagingTemplate.convertAndSend("/topic/" + roomId + ".like", updated);
+        }
+        catch (Exception e) {
             log.error(e.getMessage());
         }
+
     }
 
     // 🟢 Get Users
