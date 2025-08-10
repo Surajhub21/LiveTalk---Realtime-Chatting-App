@@ -2,7 +2,7 @@ chat-service:
   url: http://localhost:8083
 
 stripe:
-  secretKey: ${Stripe-secret-key}
+  secretKey: ${STRIPE_SECRETKEY}
 
 server:
   port: 8086
