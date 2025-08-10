@@ -40,7 +40,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void configureMessageBroker(MessageBrokerRegistry config) {
 
         config.enableStompBrokerRelay("/topic", "/queue") // Use RabbitMQ STOMP relay
-                .setRelayHost("rabbitmq")
+                .setRelayHost("localhost") // Changed to rabbitmq when run inside the docker.
                 .setRelayPort(61613)
                 .setClientLogin("guest")
                 .setClientPasscode("guest")

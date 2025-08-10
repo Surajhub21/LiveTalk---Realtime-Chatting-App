@@ -9,7 +9,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/LiveTalk
     username: postgres
-    password: postgres
+    password: Arunda2021
     driver-class-name: org.postgresql.Driver
 
   jpa:

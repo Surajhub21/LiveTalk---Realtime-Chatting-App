@@ -9,27 +9,27 @@ spring:
     gateway:
       routes:
         - id: UserService
-          uri: lb://USERSERVICE
+          uri: lb://USER-SERVICE
           predicates:
             - Path=/users/**
         - id: ModerationService
-          uri: lb://MODERATIONSERVICE
+          uri: lb://MODERATION-SERVICE
           predicates:
             - Path=/moderation/**
         - id: RoomService
-          uri: lb://ROOMSERVICE
+          uri: lb://ROOM-SERVICE
           predicates:
             - Path=/rooms/**
         - id: NotificationService
-          uri: lb://NOTIFICATIONSERVICE
+          uri: lb://NOTIFICATION-SERVICE
           predicates:
             - Path=/notification/**
         - id: ChatService
-          uri: lb://CHATSERVICE
+          uri: lb://CHAT-SERVICE
           predicates:
             - Path=/chat/**
         - id: PaymentGatewayService
-          uri: lb://PAYMENTGATEWAYSERVICE
+          uri: lb://PAYMENT-GATEWAY-SERVICE
           predicates:
             - Path=/payment/**
 
