@@ -1,159 +1,20 @@
 version: '3.8'
 
 services:
-
-  eureka-registry:
-    image: suraj7551/eureka-registry:latest
-    container_name: eureka-registry
+  redis:
+    image: redis/redis-stack:latest
+    container_name: redis-stack
     ports:
-      - "8761:8761"
-    depends_on:
-      - rabbitmq
-      - postgres
-      - mongo
-    networks:
-      - microservice-network
-      - postgres
-      - mongo
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-    restart: unless-stopped
-
-  user-service:
-    image: suraj7551/user-service:latest
-    container_name: user-service
-    ports:
-      - "8081:8081"
-    depends_on:
-      - eureka-registry
-      - postgres
-    networks:
-      - microservice-network
-      - postgres
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-
-  room-service:
-    image: suraj7551/room-service:latest
-    container_name: room-service
-    ports:
-      - "8082:8082"
-    depends_on:
-      - eureka-registry
-      - user-service
-      - postgres
-    networks:
-      - microservice-network
-      - postgres
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-
-  notification-service:
-    image: suraj7551/notification-service:latest
-    container_name: notification-service
-    ports:
-      - "8085:8085"
-    depends_on:
-      - eureka-registry
-      - mongo
-    networks:
-      - microservice-network
-      - mongo
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-
-  payment-gateway-service:
-    image: suraj7551/payment-gateway-service:latest
-    container_name: payment-gateway-service
-    ports:
-      - "8086:8086"
-    depends_on:
-      - eureka-registry
-      - chat-service
-    networks:
-      - microservice-network
-    environment:
-      - STRIPE_SECRETKEY=${Stripe_key}
-      - SPRING_PROFILES_ACTIVE=docker
-
-  moderation-service:
-    image: suraj7551/moderation-service:latest
-    container_name: moderation-service
-    ports:
-      - "8084:8084"
-    depends_on:
-      - eureka-registry
-      - mongo
-    networks:
-      - microservice-network
-      - mongo
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-
-  chat-service:
-    image: suraj7551/chat-service:latest
-    container_name: chat-service
-    ports:
-      - "8083:8083"
-    depends_on:
-      - eureka-registry
-      - room-service
-      - moderation-service
-      - mongo
-    networks:
-      - microservice-network
-      - mongo
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-
-  api-gateway:
-    image: suraj7551/api-gateway:latest
-    container_name: api-gateway
-    ports:
-      - "9090:9090"
-    depends_on:
-      - eureka-registry
-    networks:
-      - microservice-network
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-
-  postgres:
-    container_name: postgres
-    image: postgres:17
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: LiveTalk
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    networks:
-      - postgres
-    restart: unless-stopped
-
-  mongo:
-    container_name: mongo
-    image: mongo:latest
-    restart: unless-stopped
-    ports:
-      - "27017:27017"
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: mongo
-      MONGO_INITDB_ROOT_PASSWORD: mongo
-    volumes:
-      - mongodb_data:/data/db
-    networks:
-      - mongo
+      - 6379:6379 #Redis
+      - 8001:8001 #Redis Management UI
 
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
     ports:
-      - "5672:5672"       # AMQP
-      - "15672:15672"     # UI
-      - "61613:61613"     # STOMP
+      - 5672:5672       # AMQP
+      - 15672:15672     # UI
+      - 61613:61613     # STOMP
     environment:
       - RABBITMQ_DEFAULT_USER=guest
       - RABBITMQ_DEFAULT_PASS=guest
@@ -161,15 +22,180 @@ services:
       sh -c "rabbitmq-plugins enable --offline rabbitmq_stomp &&
              rabbitmq-plugins enable --offline rabbitmq_management &&
              rabbitmq-server"
-    networks:
-      - microservice-network
-    restart: unless-stopped
 
-volumes:
-  pgdata:
-  mongodb_data:
-
-networks:
-  microservice-network:
-  postgres:
-  mongo:
+#/* Docker Version */
+#version: '3.8'
+#
+#services:
+#
+#  eureka-registry:
+#    image: suraj7551/eureka-registry:latest
+#    container_name: eureka-registry
+#    ports:
+#      - "8761:8761"
+#    depends_on:
+#      - rabbitmq
+#      - postgres
+#      - mongo
+#    networks:
+#      - microservice-network
+#      - postgres
+#      - mongo
+#    environment:
+#      - SPRING_PROFILES_ACTIVE=docker
+#    restart: unless-stopped
+#
+#  user-service:
+#    image: suraj7551/user-service:latest
+#    container_name: user-service
+#    ports:
+#      - "8081:8081"
+#    depends_on:
+#      - eureka-registry
+#      - postgres
+#    networks:
+#      - microservice-network
+#      - postgres
+#    environment:
+#      - SPRING_PROFILES_ACTIVE=docker
+#
+#  room-service:
+#    image: suraj7551/room-service:latest
+#    container_name: room-service
+#    ports:
+#      - "8082:8082"
+#    depends_on:
+#      - eureka-registry
+#      - user-service
+#      - postgres
+#    networks:
+#      - microservice-network
+#      - postgres
+#    environment:
+#      - SPRING_PROFILES_ACTIVE=docker
+#
+#  notification-service:
+#    image: suraj7551/notification-service:latest
+#    container_name: notification-service
+#    ports:
+#      - "8085:8085"
+#    depends_on:
+#      - eureka-registry
+#      - mongo
+#    networks:
+#      - microservice-network
+#      - mongo
+#    environment:
+#      - SPRING_PROFILES_ACTIVE=docker
+#
+#  payment-gateway-service:
+#    image: suraj7551/payment-gateway-service:latest
+#    container_name: payment-gateway-service
+#    ports:
+#      - "8086:8086"
+#    depends_on:
+#      - eureka-registry
+#      - chat-service
+#    networks:
+#      - microservice-network
+#    environment:
+#      - STRIPE_SECRETKEY=${Stripe_key}
+#      - SPRING_PROFILES_ACTIVE=docker
+#
+#  moderation-service:
+#    image: suraj7551/moderation-service:latest
+#    container_name: moderation-service
+#    ports:
+#      - "8084:8084"
+#    depends_on:
+#      - eureka-registry
+#      - mongo
+#    networks:
+#      - microservice-network
+#      - mongo
+#    environment:
+#      - SPRING_PROFILES_ACTIVE=docker
+#
+#  chat-service:
+#    image: suraj7551/chat-service:latest
+#    container_name: chat-service
+#    ports:
+#      - "8083:8083"
+#    depends_on:
+#      - eureka-registry
+#      - room-service
+#      - moderation-service
+#      - mongo
+#    networks:
+#      - microservice-network
+#      - mongo
+#    environment:
+#      - SPRING_PROFILES_ACTIVE=docker
+#
+#  api-gateway:
+#    image: suraj7551/api-gateway:latest
+#    container_name: api-gateway
+#    ports:
+#      - "9090:9090"
+#    depends_on:
+#      - eureka-registry
+#    networks:
+#      - microservice-network
+#    environment:
+#      - SPRING_PROFILES_ACTIVE=docker
+#
+#  postgres:
+#    container_name: postgres
+#    image: postgres:17
+#    environment:
+#      POSTGRES_USER: postgres
+#      POSTGRES_PASSWORD: postgres
+#      POSTGRES_DB: LiveTalk
+#    volumes:
+#      - pgdata:/var/lib/postgresql/data
+#    ports:
+#      - "5432:5432"
+#    networks:
+#      - postgres
+#    restart: unless-stopped
+#
+#  mongo:
+#    container_name: mongo
+#    image: mongo:latest
+#    restart: unless-stopped
+#    ports:
+#      - "27017:27017"
+#    environment:
+#      MONGO_INITDB_ROOT_USERNAME: mongo
+#      MONGO_INITDB_ROOT_PASSWORD: mongo
+#    volumes:
+#      - mongodb_data:/data/db
+#    networks:
+#      - mongo
+#
+#  rabbitmq:
+#    image: rabbitmq:3-management
+#    container_name: rabbitmq
+#    ports:
+#      - "5672:5672"       # AMQP
+#      - "15672:15672"     # UI
+#      - "61613:61613"     # STOMP
+#    environment:
+#      - RABBITMQ_DEFAULT_USER=guest
+#      - RABBITMQ_DEFAULT_PASS=guest
+#    command: >
+#      sh -c "rabbitmq-plugins enable --offline rabbitmq_stomp &&
+#             rabbitmq-plugins enable --offline rabbitmq_management &&
+#             rabbitmq-server"
+#    networks:
+#      - microservice-network
+#    restart: unless-stopped
+#
+#volumes:
+#  pgdata:
+#  mongodb_data:
+#
+#networks:
+#  microservice-network:
+#  postgres:
+#  mongo:
