@@ -21,7 +21,6 @@ public class NotificationController {
     @GetMapping
     public List<ChatMessage> getAllMessages(){
         List<ChatMessage> list = notificationService.getAllMessages();
-
         return list;
     }
 

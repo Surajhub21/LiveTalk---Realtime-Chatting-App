@@ -42,7 +42,7 @@ public class WebSocketBanInterceptor implements HandshakeInterceptor {
             }
 
             List<String> bannedUsers = moderationClient.getBannedUsers(roomId);
-            if(!bannedUsers.isEmpty()) {
+            if(bannedUsers != null && !bannedUsers.isEmpty()) {
                 if (bannedUsers.contains(username)) {
                     System.out.println("Blocked banned user: " + username);
                     response.setStatusCode(HttpStatus.FORBIDDEN);

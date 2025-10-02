@@ -11,6 +11,9 @@ spring:
   data:
     mongodb:
       uri: mongodb://mongo:27017/LiveTalk
+    redis:
+      host: redis
+      port: 6379
 
   rabbitmq:
     host: rabbitmq
