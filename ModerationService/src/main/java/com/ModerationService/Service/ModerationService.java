@@ -49,6 +49,7 @@ public class ModerationService {
             BannedUser bannedUser = optionalBannedUser.get();
 
             List<String> usernames = bannedUser.getUsernames();
+
             if (usernames.remove(username)) {
                 moderationRepository.save(bannedUser); // save the updated list
                 System.out.println("User removed successfully from banned list.");

@@ -25,9 +25,9 @@ public class ChatRestController {
         this.messagingTemplate = simpMessagingTemplate;
     }
 
-    @GetMapping("/c")
+    @GetMapping("/hello")
     public String chat(){
-        return "ChatService is Running";
+        return "ChatService is Running...";
     }
 
     @PostMapping("/payment")

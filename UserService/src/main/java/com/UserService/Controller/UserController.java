@@ -19,10 +19,11 @@ public class UserController {
     }
 
     //testing Purpose
-    @GetMapping("/h")
+    @GetMapping("/hello")
     public String user(){
         return "<h1>User-Service Running...</h1>";
     }
+
     @GetMapping("/{username}")
     public UserModel getUserByUsername(@PathVariable String username){
         return userService.getUserByUsername(username);

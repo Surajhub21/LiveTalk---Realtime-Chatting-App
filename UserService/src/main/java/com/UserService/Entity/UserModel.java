@@ -18,16 +18,7 @@ public class UserModel {
     private String email;
     @Column(nullable = false)
     private String password;
-
-    @Enumerated(EnumType.STRING)
-    private UserRole role;
-
     @ElementCollection
     private List<String> roomsId;
 
-    public enum UserRole{
-        ADMIN,
-        CREATOR,
-        VIEWER,
-    }
 }

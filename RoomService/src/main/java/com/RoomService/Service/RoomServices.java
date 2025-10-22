@@ -32,15 +32,11 @@ public class RoomServices {
             throw new UserNotFoundException("User not found with username: " + request.getCreatorName());
         }
 
-        // 2. Check if the user is a CREATOR
-        if (user.getRole() != UserModel.UserRole.CREATOR) {
-            throw new UnauthorizedRoleException("User is not authorized to create a room. Only users with role 'CREATOR' can create rooms.");
-        }
-
         Room room = new Room();
         room.setRoomName(request.getRoomName());
         room.setRoomDescription(request.getRoomDescription());
         room.setCreatorName(request.getCreatorName());
+        room.setStatus(Room.RoomStatus.ACTIVE);
         return roomRepository.save(room);
     }
 
@@ -56,10 +52,6 @@ public class RoomServices {
             throw new UserNotFoundException("User not found with username: " + request.getUsername());
         }
 
-        // 2. Check if the user is a VIEWER
-        if (user.getRole() != UserModel.UserRole.VIEWER) {
-            throw new UnauthorizedRoleException("User is not authorized to create a room. Only users with role 'VIEWER' can create rooms.");
-        }
         Room room = getRoomByRoomId(request.getRoomId());
 
         if(room != null && room.getStatus() != Room.RoomStatus.CLOSED) {
@@ -72,6 +64,7 @@ public class RoomServices {
     }
 
     public boolean makeARoomAsAClose(String roomId){
+
         if(roomId != null) {
             Room room = roomRepository.getRoomByRoomId(roomId);
             room.setStatus(Room.RoomStatus.CLOSED);
